@@ -22,8 +22,6 @@ RTC_DS3231 real_time_clock;
 
 File log_file;
 
-int last_flushed_second = 0;
-
 sensors_event_t accelerometer_event, magnetometer_event;
 
 struct data_container{
@@ -81,14 +79,10 @@ void set_pin_modes(void) {
 
 void print_to_log(void) {
 
-  log_file.write((const uint8_t *)&data, sizeof(data));
+  log_file.read((uint8_t *)&data, sizeof(data));
 
-  if (last_flushed_second != data.seconds_now) {
-      log_file.flush();
-      last_flushed_second = data.seconds_now;
-  }
-
-
+  Serial.print(data.seconds_now);
+  
 }
 
 void read_sensors(void) {
@@ -126,7 +120,7 @@ void setup(void) {
 
   accelerometer.setMode(LSM303_MODE_NORMAL);
 
-  log_file = SD.open("log.dat", O_CREAT | O_WRITE);
+  log_file = SD.open("log.dat", FILE_READ);
 
 }
 
