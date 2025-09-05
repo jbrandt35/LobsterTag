@@ -31,6 +31,7 @@ struct data_container{
     float phototransistor_reading;
     float IR_sensor_reading;
     uint16_t seconds_now;
+    unsigned long milliseconds;
     float accelerometer_x;
     float accelerometer_y;
     float accelerometer_z;
@@ -38,9 +39,6 @@ struct data_container{
     float magnetometer_y;
     float magnetometer_z;
 } data;
-
-
-DateTime now;
 
 void wait_for_startup(void) {
 
@@ -63,7 +61,7 @@ void wait_for_startup(void) {
 
   if (!SD.begin(SD_card_chip_select_pin)) {
     Serial.println("Oops, SD card failed");
-    while(1);
+    while(true);
   }
 
 
@@ -83,9 +81,10 @@ void print_to_log(void) {
 
   log_file.write((const uint8_t *)&data, sizeof(data));
 
-  if (last_flushed_second != data.seconds_now) {
+  if (data.seconds_now - last_flushed_second >= 10) {
       log_file.flush();
       last_flushed_second = data.seconds_now;
+      Serial.println("Data flush");
   }
 
 
@@ -111,8 +110,9 @@ void read_sensors(void) {
 
   data.IR_sensor_reading = analogRead(IR_sensor_pin);
 
-  now = real_time_clock.now();
-  data.seconds_now = now.second();
+  data.seconds_now = real_time_clock.now().second();
+
+  data.milliseconds = millis();
 
 }
 
@@ -127,6 +127,8 @@ void setup(void) {
   accelerometer.setMode(LSM303_MODE_NORMAL);
 
   log_file = SD.open("log.dat", O_CREAT | O_WRITE);
+
+  Serial.println("Start-up Sucessful");
 
 }
 

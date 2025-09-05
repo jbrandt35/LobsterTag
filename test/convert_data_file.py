@@ -4,11 +4,11 @@ import pandas as pd
 
 data = open("/Volumes/NO_NAME/LOG.DAT", "rb").read()
 
-struct_format = "<fffHffffff"
+struct_format = "<fffHLffffff"
 
 length_of_struct = struct.calcsize(struct_format)
 
-data_storage = pd.DataFrame(columns = ["temperature_reading", "phototransistor_reading", "IR_sensor_reading", "seconds_now", "accelerometer_x", "accelerometer_y", "accelerometer_z", "magnetometer_x", "magnetometer_y", "magnetometer_z"])
+data_storage = pd.DataFrame(columns = ["temperature_reading", "phototransistor_reading", "IR_sensor_reading", "seconds_now", "milliseconds", "accelerometer_x", "accelerometer_y", "accelerometer_z", "magnetometer_x", "magnetometer_y", "magnetometer_z"])
 
 i = 0
 
