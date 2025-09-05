@@ -11,9 +11,9 @@ data_storage = pd.DataFrame(columns = ["temperature_reading", "phototransistor_r
 
 while True:
 
-    try :
+    try:
         data_point = struct.unpack("<fffHffffff", data[i:i+length_of_bytes])
-    except:
+    except struct.error:
         break
 
     data_storage.loc[len(data_storage)] = data_point
