@@ -94,7 +94,6 @@ void print_to_log(void) {
   if (abs(data.seconds_now - last_flushed_second) >= 30) {
       log_file.flush();
       last_flushed_second = data.seconds_now;
-      Serial.println("Data flush");
   }
 
 
