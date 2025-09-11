@@ -48,29 +48,9 @@ SdFat SD;
 
 void wait_for_startup(void) {
 
-  while (!Serial); 
-
-  if (!accelerometer.begin()) {
-    Serial.println("Ooops, accelerometer failed");
+  if (!accelerometer.begin() || !magnetometer.begin() || !real_time_clock.begin() || !SD.begin(SD_card_chip_select_pin, SPI_FULL_SPEED)) {
     while (true);
   }
-
-  if(!magnetometer.begin()) {
-    Serial.println("Ooops, magnetometer failed.");
-    while (true);
-  }
-
-  if (!real_time_clock.begin()) {
-      Serial.println("Oops, real time clock failed.");
-      while(true);
-  }
-
-  if (!SD.begin(SD_card_chip_select_pin, SPI_FULL_SPEED)) {
-    Serial.println("Oops, SD card failed");
-    while(true);
-  }
-
-
 }
 
 void flash_good_signal(void) {
@@ -151,8 +131,6 @@ void read_sensors(void) {
 
 void setup(void) {
 
-  Serial.begin(9600);
-
   wait_for_startup();
 
   set_pin_modes();
@@ -160,8 +138,6 @@ void setup(void) {
   accelerometer.setMode(LSM303_MODE_NORMAL);
 
   log_file = SD.open("log.dat", O_CREAT | O_WRITE);
-
-  Serial.println("Start-up Sucessful");
 
 }
 
