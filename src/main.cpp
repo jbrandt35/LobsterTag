@@ -11,6 +11,7 @@
 #define phototransistor_pin 2
 #define SD_card_chip_select_pin 4
 #define SD_card_pin 10
+#define status_light_pin 13
 
 // Assign a unique ID to the accelerometer
 Adafruit_LSM303_Accel_Unified accelerometer = Adafruit_LSM303_Accel_Unified(54321);
@@ -72,6 +73,15 @@ void wait_for_startup(void) {
 
 }
 
+void flash_good_signal(void) {
+
+  if (data.seconds_now % 2 == 0) {
+    digitalWrite(status_light_pin, HIGH);
+  } else {
+    digitalWrite(status_light_pin, LOW);
+  }
+}
+
 void set_pin_modes(void) {
 
   pinMode(temperature_sensor_pin, INPUT);
@@ -88,7 +98,16 @@ void print_to_log(void) {
   buffer_index++;
 
   if (buffer_index >= buffer_size) {
-    log_file.write((const uint8_t *)&data_buffer, sizeof(data_buffer));
+
+    int bytes_written = log_file.write((const uint8_t *)&data_buffer, sizeof(data_buffer));
+
+    if (bytes_written > 0){
+      flash_good_signal();
+    }
+    else{
+      digitalWrite(status_light_pin, LOW);
+    }
+
     buffer_index = 0;
   }
 
