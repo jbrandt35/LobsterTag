@@ -3,7 +3,8 @@
 #include <Wire.h>
 #include <Adafruit_LIS2MDL.h>
 #include <RTClib.h>
-#include <SD.h>
+#include <SPI.h>
+#include <SdFat.h>
 
 #define IR_sensor_pin 0
 #define temperature_sensor_pin 1 
@@ -24,12 +25,10 @@ File log_file;
 
 int last_flushed_second = 0;
 
-sensors_event_t accelerometer_event, magnetometer_event;
-
 struct data_container{
     float temperature_reading;
-    float phototransistor_reading;
-    float IR_sensor_reading;
+    uint16_t phototransistor_reading;
+    uint16_t IR_sensor_reading;
     uint16_t seconds_now;
     unsigned long milliseconds;
     float accelerometer_x;
@@ -39,6 +38,12 @@ struct data_container{
     float magnetometer_y;
     float magnetometer_z;
 } data;
+
+const int buffer_size = 15;
+data_container data_buffer[buffer_size];
+int buffer_index = 0; 
+
+SdFat SD;
 
 void wait_for_startup(void) {
 
@@ -59,7 +64,7 @@ void wait_for_startup(void) {
       while(true);
   }
 
-  if (!SD.begin(SD_card_chip_select_pin)) {
+  if (!SD.begin(SD_card_chip_select_pin, SPI_FULL_SPEED)) {
     Serial.println("Oops, SD card failed");
     while(true);
   }
@@ -79,9 +84,15 @@ void set_pin_modes(void) {
 
 void print_to_log(void) {
 
-  log_file.write((const uint8_t *)&data, sizeof(data));
+  data_buffer[buffer_index] = data;
+  buffer_index++;
 
-  if (data.seconds_now - last_flushed_second >= 10) {
+  if (buffer_index >= buffer_size) {
+    log_file.write((const uint8_t *)&data_buffer, sizeof(data_buffer));
+    buffer_index = 0;
+  }
+
+  if (abs(data.seconds_now - last_flushed_second) >= 30) {
       log_file.flush();
       last_flushed_second = data.seconds_now;
       Serial.println("Data flush");
@@ -90,7 +101,10 @@ void print_to_log(void) {
 
 }
 
+
 void read_sensors(void) {
+
+  sensors_event_t accelerometer_event, magnetometer_event;
 
   accelerometer.getEvent(&accelerometer_event);
 
