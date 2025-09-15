@@ -12,7 +12,7 @@ data_storage = pd.DataFrame(columns = ["temperature_reading", "phototransistor_r
 
 i = 0
 
-while True:
+while i < 1000000:
 
     try:
         data_point = struct.unpack(struct_format, data[i : i + length_of_struct])

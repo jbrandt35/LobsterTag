@@ -3,8 +3,7 @@
 #include <Wire.h>
 #include <Adafruit_LIS2MDL.h>
 #include <RTClib.h>
-#include <SPI.h>
-#include <SdFat.h>
+#include<SD.h>
 
 #define IR_sensor_pin 0
 #define temperature_sensor_pin 1 
@@ -26,6 +25,8 @@ File log_file;
 
 int last_flushed_second = 0;
 
+long starttime = 0;
+
 struct data_container{
     float temperature_reading;
     uint16_t phototransistor_reading;
@@ -40,17 +41,14 @@ struct data_container{
     float magnetometer_z;
 } data;
 
-const int buffer_size = 15;
-data_container data_buffer[buffer_size];
-int buffer_index = 0; 
-
-SdFat SD;
 
 void wait_for_startup(void) {
 
-  if (!accelerometer.begin() || !magnetometer.begin() || !real_time_clock.begin() || !SD.begin(SD_card_chip_select_pin, SPI_FULL_SPEED)) {
+  if (!accelerometer.begin() || !magnetometer.begin() || !real_time_clock.begin() || !SD.begin(SD_card_chip_select_pin)) {
     while (true);
   }
+
+  starttime = millis();
 }
 
 void flash_good_signal(void) {
@@ -74,12 +72,7 @@ void set_pin_modes(void) {
 
 void print_to_log(void) {
 
-  data_buffer[buffer_index] = data;
-  buffer_index++;
-
-  if (buffer_index >= buffer_size) {
-
-    int bytes_written = log_file.write((const uint8_t *)&data_buffer, sizeof(data_buffer));
+    int bytes_written = log_file.write((const uint8_t *)&data, sizeof(data));
 
     if (bytes_written > 0){
       flash_good_signal();
@@ -87,9 +80,6 @@ void print_to_log(void) {
     else{
       digitalWrite(status_light_pin, LOW);
     }
-
-    buffer_index = 0;
-  }
 
   if (abs(data.seconds_now - last_flushed_second) >= 30) {
       log_file.flush();
@@ -116,6 +106,7 @@ void read_sensors(void) {
   data.magnetometer_y = magnetometer_event.magnetic.y;
   data.magnetometer_z = magnetometer_event.magnetic.z;
 
+
   data.temperature_reading = (analogRead(temperature_sensor_pin) * (3.3 / 1024) - 0.5) * 100;
 
   data.phototransistor_reading = analogRead(phototransistor_pin);
@@ -123,6 +114,7 @@ void read_sensors(void) {
   data.IR_sensor_reading = analogRead(IR_sensor_pin);
 
   data.seconds_now = real_time_clock.now().second();
+  //data.seconds_now = (int) (millis() - starttime) / 1000;
 
   data.milliseconds = millis();
 
@@ -131,6 +123,9 @@ void read_sensors(void) {
 void setup(void) {
 
   wait_for_startup();
+
+  Wire.begin();               
+  Wire.setClock(400000L); 
 
   set_pin_modes();
 
