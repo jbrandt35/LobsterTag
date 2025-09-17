@@ -2,7 +2,7 @@
 import struct
 import pandas as pd
 
-data = open("/Volumes/NO_NAME/LOG.DAT", "rb").read()
+data = open("/Volumes/TAGCARD/LOG.DAT", "rb").read()
 
 struct_format = "<fHHHLffffff"
 
@@ -12,7 +12,7 @@ data_storage = pd.DataFrame(columns = ["temperature_reading", "phototransistor_r
 
 i = 0
 
-while i < 1000000:
+while True:
 
     try:
         data_point = struct.unpack(struct_format, data[i : i + length_of_struct])
@@ -23,4 +23,4 @@ while i < 1000000:
 
     i += length_of_struct
 
-data_storage.to_csv("/Volumes/NO_NAME/LOG.csv", index = False)
+data_storage.to_csv("/Volumes/TAGCARD/LOG.csv", index = False)
