@@ -4,7 +4,7 @@ import pandas as pd
 
 data = open("/Volumes/TAGCARD/LOG.DAT", "rb").read()
 
-struct_format = "<fHHHLffffff"
+struct_format = "<fHHLLffffff"
 
 length_of_struct = struct.calcsize(struct_format)
 
